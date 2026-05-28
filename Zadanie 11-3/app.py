@@ -1,12 +1,11 @@
-from IPython.core import interactiveshell
-from IPython.core import interactiveshell
 import pandas as pd
 import datetime as dt
 import os
-import dash
-from dash import html, dcc
+
+from dash import dash, html, dcc
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
+
 import tab1
 import tab2
 import tab3
@@ -15,21 +14,19 @@ import tab3
 base_path = os.path.dirname(os.path.abspath(__file__))
 class db:
     def __init__(self):
-        self.transactions = db.transation_init()
+        self.transactions = db.transactions_init()
         self.cc = pd.read_csv(os.path.join(base_path, r'db\country_codes.csv'),index_col=0)
         self.customers = pd.read_csv(os.path.join(base_path, r'db\customers.csv'),index_col=0)
         self.prod_info = pd.read_csv(os.path.join(base_path, r'db\prod_cat_info.csv'))
 
     @staticmethod
-    def transation_init():
+    def transactions_init():
         src = os.path.join(base_path, r'db\transactions')
         
-        # Tworzymy listę na ramki danych, zamiast pustego DataFrame
         files_list = []
         for filename in os.listdir(src):
             files_list.append(pd.read_csv(os.path.join(src,filename),index_col=0))
             
-        # Łączymy wszystkie pliki na raz za pomocą pd.concat
         transactions = pd.concat(files_list, ignore_index=True) if files_list else pd.DataFrame()
 
         def convert_dates(x):
@@ -56,7 +53,7 @@ class db:
         return self.merged
 
 database = db()
-df = database.merge()
+database.merge()
 
 
 
@@ -79,7 +76,7 @@ app.layout = html.Div([
 @app.callback(Output('tabs-content', 'children'), [Input('tabs', 'value')])
 def render_content(tab):
     if tab == 'tab-1':
-        return tab1.render_tab(database.merged)  # Poprawione pobieranie z bazy danych
+        return tab1.render_tab(database.merged)
     elif tab == 'tab-2':
         return tab2.render_tab(database.merged)
     elif tab == 'tab-3':
@@ -117,7 +114,7 @@ def tab1_choropleth_sales(start_date, end_date):
     fig = go.Figure(data=[trace0], layout=go.Layout(title='Mapa', geo=dict(showframe=False, projection={'type': 'natural earth'})))
     return fig
 
-# Zakładka 2
+# Zakładka 2 wykres
 @app.callback(Output('barh-prod-subcat', 'figure'),
               [Input('prod_dropdown', 'value')])
 def tab2_barh_prod_subcat(chosen_cat):
@@ -136,7 +133,7 @@ def tab2_barh_prod_subcat(chosen_cat):
     fig = go.Figure(data=traces, layout=go.Layout(barmode='stack', margin={'t': 20}))
     return fig
 
-# Zakładka 3
+# Zakładka 3 dni tygodnia
 @app.callback(
     Output('sales-day-of-week', 'figure'),
     [Input('channel_dropdown', 'value')])
@@ -160,7 +157,7 @@ def tab3_sales_by_day(chosen_channel):
     fig = go.Figure(data=[trace], layout=go.Layout( title=f'Sprzedaż w zależności od dnia tygodnia dla: {chosen_channel}',
         xaxis=dict(title='Dzień tygodnia'), yaxis=dict(title='Suma sprzedaży'), margin={'t': 50}))
     return fig
-
+# Zakładka 3 udział płci
 @app.callback(
     Output('customer-gender-pie', 'figure'),
     [Input('channel_dropdown', 'value')])
@@ -181,7 +178,7 @@ def tab3_customer_gender(chosen_channel):
     )
     return fig
 
-
+# Zakładka 3 grupy wiekowe
 @app.callback(
     Output('customer-age-bar', 'figure'),
     [Input('channel_dropdown', 'value')])
